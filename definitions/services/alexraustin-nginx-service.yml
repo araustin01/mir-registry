@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: nginx-service
 spec:
-  type: NodePort
+  type: NodePort # We'll use Apache to reverse proxy (it can handle HTTPs)
   selector:
     app: nginx
   ports:

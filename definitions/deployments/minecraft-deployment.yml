@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minecraft-deployment
+spec:
+  replicas: 1  # Number of desired Pods
+  selector:
+    matchLabels:
+      app: minecraft
+  template:
+    metadata:
+      labels:
+        app: minecraft
+    spec:
+      containers:
+      - name: minecraft-smp
+        image: ghcr.io/araustin01/mir-registry:mc-smp
+        ports:
+        - containerPort: 25565
+        volumeMounts:
+        - mountPath: /minecraft
+          name: minecraft-smp-storage
+      volumes:
+      - name: minecraft-smp-storage
+        hostPath:
+          path: /shared/minecraft/smp
+          type: Directory
+      imagePullSecrets:
+      - name: ghcr-secret
