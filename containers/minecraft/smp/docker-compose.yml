@@ -10,5 +10,3 @@ services:
       - "25565:25565"
     volumes:
       - "/shared/minecraft/smp:/minecraft"
-    command: >
-      ./start.sh
