@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  server:
+    image: ghcr.io/araustin01/mir-registry:mc-smp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "25565:25565"
+    volumes:
+      - "/shared/minecraft/smp:/minecraft"
+    command: >
+      ./start.sh
