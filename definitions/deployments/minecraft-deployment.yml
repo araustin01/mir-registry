@@ -15,6 +15,7 @@ spec:
       containers:
       - name: minecraft-smp
         image: ghcr.io/araustin01/mir-registry:mc-smp
+        imagePullPolicy: Always
         ports:
         - containerPort: 25565
         volumeMounts:

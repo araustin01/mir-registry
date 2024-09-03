@@ -1,11 +1,15 @@
 FROM openjdk:21-jdk-slim-bookworm
 
-# Install tmux
+# install tmux
 RUN apt-get update && \
     apt-get install -y tmux && \
     apt-get clean
 
-# Set the working directory
+RUN mkdir -p /root
+
+COPY .tmux.conf /root/.tmux.conf
+COPY .bashrc /root/.bashrc
+
 WORKDIR /minecraft
 
-ENTRYPOINT ["tmux", "new-session", "-s", "default", "./start.sh"]
+ENTRYPOINT ["sh", "-c", "tmux new-session -d -s default ./start.sh; sleep 5 && tail -f ./logs/latest.log"]
