@@ -10,3 +10,9 @@ services:
       - "25565:25565"
     volumes:
       - "/shared/minecraft/smp:/minecraft"
+    privileged: true
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined

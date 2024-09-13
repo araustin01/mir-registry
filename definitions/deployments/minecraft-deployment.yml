@@ -16,6 +16,15 @@ spec:
       - name: minecraft-smp
         image: ghcr.io/araustin01/mir-registry:mc-smp
         imagePullPolicy: Always
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_PTRACE
+              - SYS_ADMIN
+              - REPTYR
+          seccompProfile:
+            type: Unconfined
         ports:
         - containerPort: 25565
         volumeMounts:
