@@ -1,7 +1,7 @@
 FROM ubuntu:latest
 
 # Copy specific binaries listed in the script output
-COPY programs.txt /tmp/programs.txt
+COPY temp/programs.txt /tmp/programs.txt
 
 # Install necessary programs from the programs.txt file
 RUN apt-get update && \

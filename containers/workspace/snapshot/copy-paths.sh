@@ -3,18 +3,19 @@
 # Load environment variables from programs.env
 source programs.env
 
-# Clear any existing files to start fresh
-> programs.txt
+# Get the current directory path
+current_dir="$(pwd)"
+
+# Clear and recreate the temp directory
+rm -rf "$current_dir/temp"
+mkdir -p "$current_dir/temp"
+
+> "$current_dir/temp/programs.txt"
 
 # Populate the programs.txt file with programs to install
 for prog in "${PROGRAMS_TO_INSTALL[@]}"; do
   echo $prog >> programs.txt
 done
-
-# Get the current directory path
-current_dir="$(pwd)"
-
-rm -rf "$current_dir/temp"
 
 # Copy configuration files specified in CONFIG_FILES_TO_COPY
 for config_file in "${CONFIG_FILES_TO_COPY[@]}"; do
@@ -34,5 +35,3 @@ for config_file in "${CONFIG_FILES_TO_COPY[@]}"; do
     echo "Warning: $config_file not found on host system."
   fi
 done
-
-# Optionally add more logic to handle special cases or custom paths
