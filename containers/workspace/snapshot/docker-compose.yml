@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  snapshot:
+    image: ghcr.io/araustin01/mir-registry:dev-snapshot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    privileged: true

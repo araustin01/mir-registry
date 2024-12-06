@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: web-services
+  name: nginx-service
+spec:
+  type: NodePort # We'll use Apache to reverse proxy (it can handle HTTPs)
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30081  # Choose a port within the range 30000-32767
+

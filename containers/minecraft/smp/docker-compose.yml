@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  server:
+    image: ghcr.io/araustin01/mir-registry:mc-smp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "25565:25565"
+    volumes:
+      - "/shared/minecraft/smp:/minecraft"
+    privileged: true
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined

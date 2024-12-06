@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: web-services
+  name: pds
+  labels:
+    app: bluesky-pds
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pds
+  template:
+    metadata:
+      labels:
+        app: pds
+    spec:
+      hostNetwork: true
+      containers:
+      - name: pds
+        image: ghcr.io/bluesky-social/pds:0.4
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        volumeMounts:
+        - name: pds-volume
+          mountPath: /pds
+        envFrom:
+        - configMapRef:
+            name: pds-env
+      volumes:
+      - name: pds-volume
+        hostPath:
+          path: /pds
+          type: Directory
