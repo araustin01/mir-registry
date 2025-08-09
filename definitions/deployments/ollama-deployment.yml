@@ -51,6 +51,16 @@ spec:
           value: "8"
         - name: VECLIB_MAXIMUM_THREADS
           value: "8"
+        # Additional timeout overrides
+        - name: GOMAXPROCS
+          value: "8"
+        - name: GOMEMLIMIT
+          value: "48GiB"
+        # Network timeouts
+        - name: HTTP_TIMEOUT
+          value: "1200"
+        - name: TIMEOUT
+          value: "1200"
         readinessProbe:
           httpGet:
             path: /api/version
