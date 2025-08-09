@@ -8,8 +8,14 @@ deployments:
     namespace: alice
     dependencies:
       - namespaces/alice-namespace.yml
+      - volumes/ollama-persistent-volume.yml
       - claims/ollama-persistent-volume-claim.yml
       - configs/ollama-config.yml
+      - configs/ollama-startup-script.yml
+    resources:
+      - deployments/ollama-deployment.yml
+      - services/ollama-service.yml
+      - deployments/ollama-client-deployment.yml
     resources:
       - deployments/ollama-deployment.yml
       - services/ollama-service.yml
