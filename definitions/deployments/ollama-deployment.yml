@@ -57,12 +57,16 @@ spec:
             port: 11434
           initialDelaySeconds: 30
           periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
         livenessProbe:
           httpGet:
             path: /api/version
             port: 11434
           initialDelaySeconds: 60
           periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
       nodeSelector:
         kubernetes.io/arch: amd64
       affinity:
