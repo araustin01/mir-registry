@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: discord-bots
+  name: smplive-service
+spec:
+  selector:
+    bot: smplive
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80 # Match the containerPort defined in the Deployment
+  type: ClusterIP # Change to NodePort or LoadBalancer if external access is needed

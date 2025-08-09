@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: minecraft
+  name: our-service
+  labels:
+    app: fabric-ours
+  # annotations:
+  #   metallb.universe.tf/address-pool: default
+  #   metallb.universe.tf/allow-shared-ip: "minecraft-servers"
+spec:
+  type: LoadBalancer
+  # externalTrafficPolicy: Cluster
+  selector:
+    app: fabric-ours
+  ports:
+  - name: minecraft-ours
+    protocol: TCP
+    port: 19133 # external port for second server
+    targetPort: 19133 # internal container port

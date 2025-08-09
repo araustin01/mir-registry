@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: alice
+  name: ollama-client
+  labels:
+    app: ollama-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-client
+  template:
+    metadata:
+      labels:
+        app: ollama-client
+    spec:
+      containers:
+      - name: ollama-client
+        image: ollama/ollama:latest
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do sleep 30; done;"]
+        env:
+        - name: OLLAMA_HOST
+          value: "ollama-service:11434"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"

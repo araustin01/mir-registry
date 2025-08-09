@@ -1,0 +1,93 @@
+---
+# Deployment configurations for the Kubernetes cluster
+# Each deployment can specify its dependencies and deployment order
+
+deployments:
+  ollama:
+    description: "Ollama AI deployment in alice namespace"
+    namespace: alice
+    dependencies:
+      - namespaces/alice-namespace.yml
+      - claims/ollama-persistent-volume-claim.yml
+      - configs/ollama-config.yml
+    resources:
+      - deployments/ollama-deployment.yml
+      - services/ollama-service.yml
+      - deployments/ollama-client-deployment.yml
+    health_checks:
+      - deployment: ollama-deployment
+        namespace: alice
+      - deployment: ollama-client
+        namespace: alice
+    test_commands:
+      - "kubectl get pods -n alice"
+      - "kubectl get services -n alice"
+
+  alexraustin:
+    description: "Alex Raustin website deployment"
+    namespace: web-services
+    dependencies:
+      - secrets/ghcr-secret.yml
+    resources:
+      - deployments/alexraustin-deployment.yml
+      - services/alexraustin-nginx-service.yml
+      - claims/alexraustin-persistent-volume-claim.yml
+      - volumes/alexraustin-persistent-volume.yml
+    health_checks:
+      - deployment: nginx-deployment
+        namespace: web-services
+
+  pds:
+    description: "PDS (Personal Data Server) deployment"
+    namespace: web-services
+    dependencies:
+      - configs/pds-env.yml
+    resources:
+      - deployments/pds-deployment.yml
+      - services/pds-service.yml
+    health_checks:
+      - deployment: pds-deployment
+        namespace: web-services
+
+  smplive:
+    description: "SMP Live deployment"
+    namespace: web-services
+    dependencies:
+      - configs/smplive-env.yml
+    resources:
+      - deployments/smplive-deployment.yml
+      - services/smplive-service.yml
+    health_checks:
+      - deployment: smplive-deployment
+        namespace: web-services
+
+  minecraft-smp:
+    description: "Minecraft SMP server deployment"
+    namespace: minecraft
+    dependencies: []
+    resources:
+      - deployments/minecraft/smp-deployment.yml
+      - services/minecraft/smp-service.yml
+    health_checks:
+      - deployment: minecraft-smp
+        namespace: minecraft
+
+  minecraft-our:
+    description: "Minecraft Our server deployment"
+    namespace: minecraft
+    dependencies: []
+    resources:
+      - deployments/minecraft/our-deployment.yml
+      - services/minecraft/our-service.yml
+    health_checks:
+      - deployment: minecraft-our
+        namespace: minecraft
+
+  metallb:
+    description: "MetalLB load balancer"
+    namespace: metallb-system
+    dependencies:
+      - configs/metallb-system.yml
+    resources:
+      - pools/metallb-system.yml
+    health_checks: []

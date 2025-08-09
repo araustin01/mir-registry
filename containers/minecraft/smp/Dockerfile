@@ -1,4 +1,4 @@
-FROM openjdk:21-jdk-slim-bookworm
+FROM openjdk:22-jdk-slim-bookworm
 
 # install tmux
 RUN apt-get update && \

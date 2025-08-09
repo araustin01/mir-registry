@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: discord-bots
+  name: smplive-deployment
+  labels:
+    bot: smplive
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      bot: smplive
+  template:
+    metadata:
+      labels:
+        bot: smplive
+    spec:
+      hostNetwork: true
+      containers:
+        - name: smplive-container
+          image: ghcr.io/araustin01/smplive-bot:latest
+          command: ["python", "bot.py"]
+          workingDir: /usr/src/app
+          envFrom:
+          - configMapRef:
+              name: smplive-env
+          volumeMounts:
+            - name: smplive-volume
+              mountPath: /usr/src/app
+      volumes:
+        - name: smplive-volume
+          hostPath:
+            path: /usr/src/applications/bots/smplive/src
+            type: Directory
+      imagePullSecrets:
+      - name: ghcr-secret

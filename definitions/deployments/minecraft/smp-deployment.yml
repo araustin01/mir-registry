@@ -1,17 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: minecraft-deployment
+  namespace: minecraft 
+  name: smp-deployment
+  labels:
+    app: fabric-smp
 spec:
-  replicas: 1  # Number of desired Pods
+  replicas: 1 # Number of desired Pods
   selector:
     matchLabels:
-      app: minecraft
+      app: fabric-smp
   template:
     metadata:
       labels:
-        app: minecraft
+        app: fabric-smp
     spec:
+      hostNetwork: true
       containers:
       - name: minecraft-smp
         image: ghcr.io/araustin01/mir-registry:mc-smp
@@ -25,8 +29,12 @@ spec:
               - REPTYR
           seccompProfile:
             type: Unconfined
+        env:
+        - name: TZ
+          value: "America/New_York"
         ports:
         - containerPort: 25565
+        - containerPort: 19132
         volumeMounts:
         - mountPath: /minecraft
           name: minecraft-smp-storage
