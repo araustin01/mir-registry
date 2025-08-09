@@ -5,8 +5,7 @@ metadata:
   name: ollama-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
-      storage: 20Gi
-  storageClassName: microk8s-hostpath
+      storage: 250Gi
