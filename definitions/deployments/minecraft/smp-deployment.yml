@@ -29,6 +29,8 @@ spec:
               - REPTYR
           seccompProfile:
             type: Unconfined
+        tty: true
+        stdin: true
         env:
         - name: TZ
           value: "America/New_York"

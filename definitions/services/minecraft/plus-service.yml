@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: minecraft
+  name: plus-service
+  labels:
+    app: fabric-plus
+  # annotations:
+  #   metallb.universe.tf/address-pool: default
+  #   metallb.universe.tf/allow-shared-ip: "minecraft-servers"
+spec:
+  type: LoadBalancer
+  # externalTrafficPolicy: Cluster # default is Cluster
+  selector:
+    app: fabric-plus
+  ports:
+  - name: minecraft-plus
+    protocol: TCP
+    port: 25567
+    targetPort: 25567

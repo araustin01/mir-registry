@@ -27,11 +27,11 @@ spec:
         - containerPort: 8443
           protocol: TCP
         args:
-        - --auto-generate-certificates
         - --namespace=kube-system
         # Session timeout configuration (in seconds)
         - --token-ttl=86400  # 24 hours instead of default 15 minutes
-        - --auto-generate-certificates
+        - --tls-cert-file=tls.crt
+        - --tls-key-file=tls.key
         - --enable-skip-login=false
         - --enable-insecure-login=false
         # Optional: disable authentication (NOT recommended for production)

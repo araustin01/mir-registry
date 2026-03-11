@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kubernetes-dashboard-certs
+  namespace: kube-system
+spec:
+  secretName: kubernetes-dashboard-certs
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: k8s.alexraustin.com
+  dnsNames:
+  - k8s.alexraustin.com
