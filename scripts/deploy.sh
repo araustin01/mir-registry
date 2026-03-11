@@ -36,12 +36,6 @@ print_header() {
 
 # Function to check if dependencies are installed
 check_dependencies() {
-    if ! command -v yq &> /dev/null; then
-        print_error "yq is required but not installed. Please install yq to parse YAML files."
-        print_status "Install with: sudo snap install yq"
-        exit 1
-    fi
-    
     # Check for microk8s first, then kubectl
     if command -v microk8s &> /dev/null; then
         KUBECTL_CMD="microk8s kubectl"
@@ -55,6 +49,20 @@ check_dependencies() {
         print_status "Or install kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/"
         exit 1
     fi
+    
+    # Check for YAML parsing capability
+    if command -v yq &> /dev/null; then
+        YAML_PARSER="yq"
+        print_status "Using yq for YAML parsing"
+    elif python3 -c "import yaml" &> /dev/null; then
+        YAML_PARSER="python"
+        print_status "Using Python for YAML parsing"
+    else
+        print_error "Neither yq nor Python with YAML support is available."
+        print_status "Install yq with: sudo snap install yq"
+        print_status "Or install Python YAML: pip install pyyaml"
+        exit 1
+    fi
 }
 
 # Function to get deployment configuration
@@ -62,7 +70,20 @@ get_deployment_config() {
     local deployment_name="$1"
     local field="$2"
     
-    yq eval ".deployments.${deployment_name}.${field}" "$CONFIG_FILE" 2>/dev/null
+    if [[ "$YAML_PARSER" == "yq" ]]; then
+        yq eval ".deployments.${deployment_name}.${field}" "$CONFIG_FILE" 2>/dev/null
+    else
+        python3 -c "
+import yaml
+try:
+    with open('$CONFIG_FILE', 'r') as f:
+        data = yaml.safe_load(f)
+    result = data.get('deployments', {}).get('$deployment_name', {}).get('$field', 'null')
+    print(result if result is not None else 'null')
+except Exception:
+    print('null')
+"
+    fi
 }
 
 # Function to get deployment array
@@ -70,17 +91,55 @@ get_deployment_array() {
     local deployment_name="$1"
     local field="$2"
     
-    yq eval ".deployments.${deployment_name}.${field}[]" "$CONFIG_FILE" 2>/dev/null
+    if [[ "$YAML_PARSER" == "yq" ]]; then
+        yq eval ".deployments.${deployment_name}.${field}[]" "$CONFIG_FILE" 2>/dev/null
+    else
+        python3 -c "
+import yaml
+try:
+    with open('$CONFIG_FILE', 'r') as f:
+        data = yaml.safe_load(f)
+    items = data.get('deployments', {}).get('$deployment_name', {}).get('$field', [])
+    if isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict):
+                print('deployment: ' + str(item.get('deployment', '')))
+                print('namespace: ' + str(item.get('namespace', '')))
+            else:
+                print(item)
+    else:
+        print('null')
+except Exception:
+    print('null')
+"
+    fi
 }
 
 # Function to list available deployments
 list_deployments() {
     print_header "Available Deployments"
-    yq eval '.deployments | keys | .[]' "$CONFIG_FILE" 2>/dev/null | while read -r deployment; do
-        description=$(get_deployment_config "$deployment" "description")
-        namespace=$(get_deployment_config "$deployment" "namespace")
-        echo "  $deployment - $description (namespace: $namespace)"
-    done
+    
+    if [[ "$YAML_PARSER" == "yq" ]]; then
+        yq eval '.deployments | keys | .[]' "$CONFIG_FILE" 2>/dev/null | while read -r deployment; do
+            description=$(get_deployment_config "$deployment" "description")
+            namespace=$(get_deployment_config "$deployment" "namespace")
+            echo "  $deployment - $description (namespace: $namespace)"
+        done
+    else
+        python3 -c "
+import yaml
+try:
+    with open('$CONFIG_FILE', 'r') as f:
+        data = yaml.safe_load(f)
+    deployments = data.get('deployments', {})
+    for name, config in deployments.items():
+        description = config.get('description', 'No description')
+        namespace = config.get('namespace', 'default')
+        print(f'  {name} - {description} (namespace: {namespace})')
+except Exception as e:
+    print(f'Error reading config file: {e}')
+"
+    fi
 }
 
 # Function to deploy resources
@@ -90,7 +149,21 @@ deploy_deployment() {
     print_header "Deploying $deployment_name"
     
     # Check if deployment exists in config
-    if ! yq eval ".deployments | has(\"$deployment_name\")" "$CONFIG_FILE" | grep -q "true"; then
+    if [[ "$YAML_PARSER" == "yq" ]]; then
+        deployment_exists=$(yq eval ".deployments | has(\"$deployment_name\")" "$CONFIG_FILE" 2>/dev/null)
+    else
+        deployment_exists=$(python3 -c "
+import yaml
+try:
+    with open('$CONFIG_FILE', 'r') as f:
+        data = yaml.safe_load(f)
+    print('true' if '$deployment_name' in data.get('deployments', {}) else 'false')
+except Exception:
+    print('false')
+")
+    fi
+    
+    if [[ "$deployment_exists" != "true" ]]; then
         print_error "Deployment '$deployment_name' not found in configuration"
         list_deployments
         exit 1
@@ -137,8 +210,10 @@ deploy_deployment() {
     print_status "Running verification commands..."
     get_deployment_array "$deployment_name" "test_commands" | while read -r command; do
         if [[ "$command" != "null" && "$command" != "" ]]; then
-            print_status "  Running: $command"
-            eval "$command"
+            # Replace kubectl with our kubectl command variable
+            fixed_command=$(echo "$command" | sed "s/kubectl/$KUBECTL_CMD/g")
+            print_status "  Running: $fixed_command"
+            eval "$fixed_command"
         fi
     done
     
@@ -152,7 +227,21 @@ delete_deployment() {
     print_header "Deleting $deployment_name"
     
     # Check if deployment exists in config
-    if ! yq eval ".deployments | has(\"$deployment_name\")" "$CONFIG_FILE" | grep -q "true"; then
+    if [[ "$YAML_PARSER" == "yq" ]]; then
+        deployment_exists=$(yq eval ".deployments | has(\"$deployment_name\")" "$CONFIG_FILE" 2>/dev/null)
+    else
+        deployment_exists=$(python3 -c "
+import yaml
+try:
+    with open('$CONFIG_FILE', 'r') as f:
+        data = yaml.safe_load(f)
+    print('true' if '$deployment_name' in data.get('deployments', {}) else 'false')
+except Exception:
+    print('false')
+")
+    fi
+    
+    if [[ "$deployment_exists" != "true" ]]; then
         print_error "Deployment '$deployment_name' not found in configuration"
         exit 1
     fi
@@ -222,9 +311,16 @@ show_logs() {
 main() {
     check_dependencies
     
+    # Handle special case for 'list' command
+    if [[ $# -eq 1 && "$1" == "list" ]]; then
+        list_deployments
+        exit 0
+    fi
+    
     if [[ $# -eq 0 ]]; then
         echo "Usage: $0 <deployment-name> [action]"
-        echo "Actions: deploy (default), delete, status, logs, list"
+        echo "       $0 list"
+        echo "Actions: deploy (default), delete, status, logs"
         echo ""
         list_deployments
         exit 1
@@ -251,7 +347,8 @@ main() {
             ;;
         *)
             print_error "Unknown action: $action"
-            echo "Available actions: deploy, delete, status, logs, list"
+            echo "Available actions: deploy, delete, status, logs"
+            echo "To list deployments: $0 list"
             exit 1
             ;;
     esac

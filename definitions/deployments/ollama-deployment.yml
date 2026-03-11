@@ -18,24 +18,90 @@ spec:
       containers:
       - name: ollama
         image: ollama/ollama:latest
+        command: ["/bin/bash"]
+        args: ["/scripts/startup.sh"]
         ports:
         - containerPort: 11434
-        env:
-        - name: OLLAMA_HOST
-          value: "0.0.0.0"
-        - name: OLLAMA_ORIGINS
-          value: "*"
+        envFrom:
+        - configMapRef:
+            name: ollama-config
         volumeMounts:
         - name: ollama-data
           mountPath: /root/.ollama
+        - name: startup-script
+          mountPath: /scripts
+        - name: performance-config
+          mountPath: /performance
         resources:
           requests:
-            memory: "2Gi"
-            cpu: "1000m"
+            memory: "16Gi"
+            cpu: "4000m"
           limits:
-            memory: "4Gi"
-            cpu: "2000m"
+            memory: "48Gi"
+            cpu: "8000m"
+        securityContext:
+          capabilities:
+            add: ["SYS_NICE", "SYS_RESOURCE"]
+        env:
+        - name: OMP_NUM_THREADS
+          value: "8"
+        - name: MKL_NUM_THREADS
+          value: "8"
+        - name: OPENBLAS_NUM_THREADS
+          value: "8"
+        - name: VECLIB_MAXIMUM_THREADS
+          value: "8"
+        # Additional timeout overrides
+        - name: GOMAXPROCS
+          value: "8"
+        - name: GOMEMLIMIT
+          value: "48GiB"
+        # Network timeouts
+        - name: HTTP_TIMEOUT
+          value: "1200"
+        - name: TIMEOUT
+          value: "1200"
+        readinessProbe:
+          httpGet:
+            path: /api/version
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /api/version
+            port: 11434
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values: ["high-cpu", "compute-optimized"]
+      tolerations:
+      - key: "high-cpu-usage"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
       volumes:
       - name: ollama-data
         persistentVolumeClaim:
           claimName: ollama-pvc
+      - name: startup-script
+        configMap:
+          name: ollama-startup-script
+          defaultMode: 0755
+      - name: performance-config
+        configMap:
+          name: ollama-performance-config
+          defaultMode: 0755
