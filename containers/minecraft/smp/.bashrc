@@ -1,4 +1,4 @@
-SESSION_NAME="minecraft"
+SESSION_NAME="default"
 
 if [ -z "$TMUX" ]; then
     # Attach to tmux session

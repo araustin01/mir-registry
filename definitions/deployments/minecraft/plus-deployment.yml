@@ -2,22 +2,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: minecraft 
-  name: our-deployment
+  name: plus-deployment
   labels:
-    app: fabric-ours
+    app: fabric-plus
 spec:
-  replicas: 1
+  replicas: 1 # Number of desired Pods
   selector:
     matchLabels:
-      app: fabric-ours
+      app: fabric-plus
   template:
     metadata:
       labels:
-        app: fabric-ours
+        app: fabric-plus
     spec:
       hostNetwork: true
       containers:
-      - name: minecraft-ours
+      - name: minecraft-plus
         image: ghcr.io/araustin01/mir-registry:mc-smp
         imagePullPolicy: Always
         securityContext:
@@ -29,21 +29,25 @@ spec:
               - REPTYR
           seccompProfile:
             type: Unconfined
+        resources:
+          requests:
+            memory: "10Gi"  # Guarantee 10GB is available for this pod
+            cpu: "4"
         tty: true
         stdin: true
         env:
         - name: TZ
           value: "America/New_York"
         ports:
-        - containerPort: 25566
-        - containerPort: 19133
+        - containerPort: 25567
+        - containerPort: 19134
         volumeMounts:
         - mountPath: /minecraft
-          name: minecraft-our-storage
+          name: minecraft-plus-storage
       volumes:
-      - name: minecraft-our-storage
+      - name: minecraft-plus-storage
         hostPath:
-          path: /shared/minecraft/ours
+          path: /shared/minecraft/plus
           type: Directory
       imagePullSecrets:
       - name: ghcr-secret
