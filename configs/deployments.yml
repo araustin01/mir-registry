@@ -8,7 +8,6 @@ deployments:
     namespace: alice
     dependencies:
       - namespaces/alice-namespace.yml
-      - volumes/ollama-persistent-volume.yml
       - claims/ollama-persistent-volume-claim.yml
       - configs/ollama/ollama-config.yml
       - configs/ollama/ollama-startup-script.yml
@@ -86,6 +85,19 @@ deployments:
     health_checks:
       - deployment: minecraft-our
         namespace: minecraft
+
+  adguard:
+    description: "AdGuard Home DNS deployment"
+    namespace: network
+    dependencies:
+      - namespaces/network-namespace.yml
+      - claims/adguard-persistent-volume-claim.yml
+    resources:
+      - deployments/adguard-deployment.yml
+      - services/adguard-service.yml
+    health_checks:
+      - deployment: adguard-deployment
+        namespace: network
 
   metallb:
     description: "MetalLB load balancer"
