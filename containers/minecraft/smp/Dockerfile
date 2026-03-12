@@ -21,4 +21,3 @@ RUN rm -f /minecraft/world/session.lock
 WORKDIR /minecraft
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-#ENTRYPOINT ["sh", "-c", "tmux new-session -d -s minecraft '/minecraft/start.sh'; tail -f"]

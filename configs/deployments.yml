@@ -4,12 +4,15 @@
 
 deployments:
   ollama:
-    description: "Ollama AI deployment in alice namespace"
+    description: "Ollama AI deployment in alice namespace with performance optimizations"
     namespace: alice
     dependencies:
       - namespaces/alice-namespace.yml
       - claims/ollama-persistent-volume-claim.yml
-      - configs/ollama-config.yml
+      - configs/ollama/ollama-config.yml
+      - configs/ollama/ollama-startup-script.yml
+      - configs/ollama/ollama-performance-config.yml
+      - configs/ollama/ollama-client-scripts.yml
     resources:
       - deployments/ollama-deployment.yml
       - services/ollama-service.yml
@@ -24,7 +27,7 @@ deployments:
       - "kubectl get services -n alice"
 
   alexraustin:
-    description: "Alex Raustin website deployment"
+    description: "alexraustin.com web deployment"
     namespace: web-services
     dependencies:
       - secrets/ghcr-secret.yml

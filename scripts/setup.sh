@@ -42,11 +42,55 @@ check_root() {
 install_yq() {
     if command -v yq &> /dev/null; then
         print_status "yq is already installed"
+        # Check if it's the snap version and warn about potential issues
+        if yq --version | grep -q "snap" || which yq | grep -q "snap"; then
+            print_warning "yq is installed via snap which may have file access issues"
+            print_status "Consider reinstalling with: $0 reinstall-yq"
+        fi
         return 0
     fi
     
     print_status "Installing yq..."
-    sudo snap install yq
+    
+    # First try to remove snap version if it exists
+    if snap list yq &> /dev/null; then
+        print_status "Removing snap version of yq..."
+        sudo snap remove yq
+    fi
+    
+    # Install yq using wget and direct binary installation
+    print_status "Downloading yq binary..."
+    YQ_VERSION="v4.46.1"
+    YQ_BINARY="yq_linux_amd64"
+    
+    wget -O /tmp/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}"
+    chmod +x /tmp/yq
+    sudo mv /tmp/yq /usr/local/bin/yq
+    
+    print_status "yq installed successfully"
+}
+
+# Function to reinstall yq (remove snap version and install binary)
+reinstall_yq() {
+    print_status "Reinstalling yq with binary version..."
+    
+    # Remove snap version if it exists
+    if snap list yq &> /dev/null; then
+        print_status "Removing snap version of yq..."
+        sudo snap remove yq
+    fi
+    
+    # Remove any existing binary
+    if command -v yq &> /dev/null; then
+        YQ_PATH=$(which yq)
+        if [[ "$YQ_PATH" == "/usr/local/bin/yq" ]]; then
+            print_status "Removing existing binary version..."
+            sudo rm -f /usr/local/bin/yq
+        fi
+    fi
+    
+    # Install fresh binary
+    install_yq
 }
 
 # Function to install microk8s
@@ -191,12 +235,14 @@ show_help() {
     echo "Commands:"
     echo "  full-setup    - Complete setup (install everything)"
     echo "  install-deps  - Install dependencies (yq, microk8s)"
+    echo "  reinstall-yq  - Reinstall yq with binary version (fixes snap issues)"
     echo "  setup-k8s     - Setup and configure microk8s"
     echo "  setup-scripts - Make scripts executable"
     echo "  verify        - Verify installation"
     echo "  help          - Show this help"
     echo ""
     echo "For first-time setup, run: $0 full-setup"
+    echo "If experiencing yq file access issues, run: $0 reinstall-yq"
 }
 
 # Main function
@@ -219,6 +265,9 @@ main() {
             check_root
             install_yq
             install_microk8s
+            ;;
+        "reinstall-yq")
+            reinstall_yq
             ;;
         "setup-k8s")
             setup_microk8s
