@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  namespace: outline
+  namespace: web-services
   name: outline-state
 spec:
   accessModes:
