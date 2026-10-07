@@ -5,14 +5,14 @@ metadata:
 spec:
   acme:
     # You must replace this email with your own email address
-    email: geeveloper@gmail.com
+    email: araustincs@gmail.com
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-prod-account-key
     solvers:
     - dns01:
         cloudflare:
-          email: geeveloper@gmail.com
+          email: araustincs@gmail.com
           apiTokenSecretRef:
             name: cloudflare-api-token-secret
             key: api-token
