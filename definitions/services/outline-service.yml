@@ -8,6 +8,10 @@ spec:
   selector:
     app: outline-server
   ports:
+    - name: management
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
     - name: proxy-tcp
       port: 8443
       targetPort: proxy-tcp
