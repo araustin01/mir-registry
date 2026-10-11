@@ -18,7 +18,7 @@ spec:
       hostNetwork: true
       containers:
       - name: pds
-        image: ghcr.io/bluesky-social/pds:0.4
+        image: ghcr.io/bluesky-social/pds:0.4.5027
         ports:
         - containerPort: 3000
           protocol: TCP

@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: web-services
+  name: outline-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: outline-server
+  template:
+    metadata:
+      labels:
+        app: outline-server
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: initialize-state
+          image: quay.io/outline/shadowbox@sha256:545c6f7c7261bb30ae1dffe24a6fca5f8512f5d17c72cfb9e410e7e655444e62
+          command:
+            - node
+            - -e
+            - |
+              const fs = require('fs');
+              const filename = '/state/shadowbox_server_config.json';
+              if (!fs.existsSync(filename)) {
+                fs.writeFileSync(filename, JSON.stringify({
+                  hostname: 'vpn.alexraustin.com',
+                  name: 'Outline VPN',
+                  portForNewAccessKeys: 8443,
+                  metricsEnabled: false
+                }), {mode: 0o600, flag: 'wx'});
+              }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: state
+              mountPath: /state
+      containers:
+        - name: shadowbox
+          image: quay.io/outline/shadowbox@sha256:545c6f7c7261bb30ae1dffe24a6fca5f8512f5d17c72cfb9e410e7e655444e62
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: SB_STATE_DIR
+              value: /state
+            - name: SB_API_PORT
+              value: "8081"
+            - name: SB_API_PREFIX
+              valueFrom:
+                secretKeyRef:
+                  name: outline-api
+                  key: api-prefix
+            - name: SB_CERTIFICATE_FILE
+              value: /tls/tls.crt
+            - name: SB_PRIVATE_KEY_FILE
+              value: /tls/tls.key
+            - name: SB_PUBLIC_IP
+              value: vpn.alexraustin.com
+          ports:
+            - name: api
+              containerPort: 8081
+            - name: proxy-tcp
+              containerPort: 8443
+              protocol: TCP
+            - name: proxy-udp
+              containerPort: 8443
+              protocol: UDP
+          startupProbe:
+            tcpSocket:
+              port: api
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket:
+              port: api
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: state
+              mountPath: /state
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: outline-state
+        - name: tls
+          secret:
+            secretName: outline-api
+            defaultMode: 0400
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
